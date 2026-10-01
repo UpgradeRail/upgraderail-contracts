@@ -1,5 +1,8 @@
 use soroban_sdk::{
-    testutils::{storage::{Instance as _, Persistent as _}, Address as _, Ledger as _},
+    testutils::{
+        storage::{Instance as _, Persistent as _},
+        Address as _, Ledger as _,
+    },
     Address, BytesN, Env, String, Vec,
 };
 
@@ -45,7 +48,9 @@ fn maintenance_retains_instance_proposal_approvals_and_fleet_reference() {
                 >= policy.proposal_lifetime_ledgers + PROPOSAL_TTL_SAFETY_BUFFER
         );
         assert!(
-            env.storage().persistent().get_ttl(&DataKey::Approval(id, approver.clone()))
+            env.storage()
+                .persistent()
+                .get_ttl(&DataKey::Approval(id, approver.clone()))
                 >= policy.proposal_lifetime_ledgers + PROPOSAL_TTL_SAFETY_BUFFER
         );
     });
@@ -58,23 +63,30 @@ fn maintenance_retains_instance_proposal_approvals_and_fleet_reference() {
                 >= PERSISTENT_RECORD_TTL_TARGET
         );
         assert!(
-            env.storage().persistent().get_ttl(&DataKey::Approval(id, approver.clone()))
+            env.storage()
+                .persistent()
+                .get_ttl(&DataKey::Approval(id, approver.clone()))
                 >= PERSISTENT_RECORD_TTL_TARGET
         );
     });
     assert!(client.try_maintain_proposal(&999).is_err());
     assert!(client.try_maintain_fleet(&fleet_id).is_err());
 
-    env.ledger().set_sequence_number(env.ledger().sequence() + 3);
+    env.ledger()
+        .set_sequence_number(env.ledger().sequence() + 3);
     client.execute_proposal(&id);
     client.maintain_fleet(&fleet_id);
     env.as_contract(&controller, || {
         assert!(
-            env.storage().persistent().get_ttl(&DataKey::Fleet(fleet_id.clone()))
+            env.storage()
+                .persistent()
+                .get_ttl(&DataKey::Fleet(fleet_id.clone()))
                 >= PERSISTENT_RECORD_TTL_TARGET
         );
         assert!(
-            env.storage().persistent().get_ttl(&DataKey::FleetByTag(tag.clone()))
+            env.storage()
+                .persistent()
+                .get_ttl(&DataKey::FleetByTag(tag.clone()))
                 >= PERSISTENT_RECORD_TTL_TARGET
         );
         assert!(env.executable_refs().get_ttl(&tag) >= PERSISTENT_RECORD_TTL_TARGET);

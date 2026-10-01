@@ -1,8 +1,8 @@
-mod policy;
-mod constructor;
-mod proposals;
 mod approvals;
+mod constructor;
+mod controller_upgrade;
 mod fleet_upgrade;
 mod governance;
-mod controller_upgrade;
+mod policy;
+mod proposals;
 mod ttl;

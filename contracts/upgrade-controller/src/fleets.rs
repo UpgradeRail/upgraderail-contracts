@@ -33,10 +33,16 @@ pub(crate) fn create(
     storage::set_fleet(env, &fleet);
     let max_ttl = env.storage().max_ttl();
     env.storage().persistent().extend_ttl_with_limits(
-        &DataKey::Fleet(fleet.id.clone()), max_ttl, 1, max_ttl,
+        &DataKey::Fleet(fleet.id.clone()),
+        max_ttl,
+        1,
+        max_ttl,
     );
     env.storage().persistent().extend_ttl_with_limits(
-        &DataKey::FleetByTag(fleet.tag.clone()), max_ttl, 1, max_ttl,
+        &DataKey::FleetByTag(fleet.tag.clone()),
+        max_ttl,
+        1,
+        max_ttl,
     );
     env.executable_refs()
         .extend_ttl_with_limits(&fleet.tag, max_ttl, 1, max_ttl);

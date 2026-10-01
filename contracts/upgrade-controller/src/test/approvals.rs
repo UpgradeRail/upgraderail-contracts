@@ -1,4 +1,7 @@
-use soroban_sdk::{testutils::{Address as _, Ledger as _}, Address, BytesN, Env, String, Vec};
+use soroban_sdk::{
+    testutils::{Address as _, Ledger as _},
+    Address, BytesN, Env, String, Vec,
+};
 
 use crate::storage;
 use crate::types::{CreateFleetProposal, GovernancePolicy, ProposalKind};
@@ -85,7 +88,8 @@ fn revocation_resets_timelock_and_reapproval_starts_anew() {
     let old = env.as_contract(&contract, || storage::proposal(&env, id).unwrap());
     assert!(client.try_revoke_approval(&id, &outsider).is_err());
 
-    env.ledger().set_sequence_number(env.ledger().sequence() + 2);
+    env.ledger()
+        .set_sequence_number(env.ledger().sequence() + 2);
     client.revoke_approval(&id, &first);
     let reset = env.as_contract(&contract, || storage::proposal(&env, id).unwrap());
     assert_eq!(reset.approval_count, 1);
@@ -93,11 +97,15 @@ fn revocation_resets_timelock_and_reapproval_starts_anew() {
     assert_eq!(reset.execute_after_ledger, None);
     assert!(client.try_revoke_approval(&id, &first).is_err());
 
-    env.ledger().set_sequence_number(env.ledger().sequence() + 5);
+    env.ledger()
+        .set_sequence_number(env.ledger().sequence() + 5);
     client.approve(&id, &first);
     let fresh = env.as_contract(&contract, || storage::proposal(&env, id).unwrap());
     assert_eq!(fresh.approval_count, 2);
     assert_eq!(fresh.approved_ledger, Some(env.ledger().sequence()));
-    assert_eq!(fresh.execute_after_ledger, Some(env.ledger().sequence() + 5));
+    assert_eq!(
+        fresh.execute_after_ledger,
+        Some(env.ledger().sequence() + 5)
+    );
     assert!(fresh.execute_after_ledger > old.execute_after_ledger);
 }

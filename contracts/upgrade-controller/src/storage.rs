@@ -21,7 +21,9 @@ pub(crate) fn epoch(env: &Env) -> Option<u64> {
 }
 
 pub(crate) fn set_nonce(env: &Env, nonce: u64) {
-    env.storage().instance().set(&DataKey::ProposalNonce, &nonce);
+    env.storage()
+        .instance()
+        .set(&DataKey::ProposalNonce, &nonce);
 }
 
 pub(crate) fn nonce(env: &Env) -> Option<u64> {

@@ -28,7 +28,10 @@ fn accepts_valid_policy_and_bounded_approver_count() {
     }
     assert_eq!(validate(&env, &configured), Ok(()));
     configured.approvers.push_back(Address::generate(&env));
-    assert_eq!(validate(&env, &configured), Err(ContractError::TooManyApprovers));
+    assert_eq!(
+        validate(&env, &configured),
+        Err(ContractError::TooManyApprovers)
+    );
 }
 
 #[test]
@@ -39,14 +42,25 @@ fn rejects_invalid_approvers_and_threshold() {
     assert_eq!(validate(&env, &configured), Err(ContractError::NoApprovers));
 
     configured = policy(&env);
-    configured.approvers.push_back(configured.approvers.get(0).unwrap());
-    assert_eq!(validate(&env, &configured), Err(ContractError::DuplicateApprover));
+    configured
+        .approvers
+        .push_back(configured.approvers.get(0).unwrap());
+    assert_eq!(
+        validate(&env, &configured),
+        Err(ContractError::DuplicateApprover)
+    );
 
     configured = policy(&env);
     configured.threshold = 0;
-    assert_eq!(validate(&env, &configured), Err(ContractError::InvalidThreshold));
+    assert_eq!(
+        validate(&env, &configured),
+        Err(ContractError::InvalidThreshold)
+    );
     configured.threshold = 3;
-    assert_eq!(validate(&env, &configured), Err(ContractError::InvalidThreshold));
+    assert_eq!(
+        validate(&env, &configured),
+        Err(ContractError::InvalidThreshold)
+    );
 }
 
 #[test]
@@ -54,17 +68,25 @@ fn rejects_invalid_timelock_and_lifetime() {
     let env = Env::default();
     let mut configured = policy(&env);
     configured.timelock_ledgers = 0;
-    assert_eq!(validate(&env, &configured), Err(ContractError::InvalidTimelock));
+    assert_eq!(
+        validate(&env, &configured),
+        Err(ContractError::InvalidTimelock)
+    );
 
     configured.timelock_ledgers = 10;
     configured.proposal_lifetime_ledgers = 10;
-    assert_eq!(validate(&env, &configured), Err(ContractError::InvalidProposalLifetime));
+    assert_eq!(
+        validate(&env, &configured),
+        Err(ContractError::InvalidProposalLifetime)
+    );
 
-    configured.proposal_lifetime_ledgers = core::cmp::min(
-        env.storage().max_ttl(),
-        crate::ttl::MAX_TTL_EXTENSION,
-    ) - PROPOSAL_TTL_SAFETY_BUFFER;
+    configured.proposal_lifetime_ledgers =
+        core::cmp::min(env.storage().max_ttl(), crate::ttl::MAX_TTL_EXTENSION)
+            - PROPOSAL_TTL_SAFETY_BUFFER;
     assert_eq!(validate(&env, &configured), Ok(()));
     configured.proposal_lifetime_ledgers += 1;
-    assert_eq!(validate(&env, &configured), Err(ContractError::InvalidProposalLifetime));
+    assert_eq!(
+        validate(&env, &configured),
+        Err(ContractError::InvalidProposalLifetime)
+    );
 }

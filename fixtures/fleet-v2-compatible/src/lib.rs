@@ -8,11 +8,15 @@ pub struct FleetV2Compatible;
 #[contractimpl]
 impl FleetV2Compatible {
     pub fn __constructor(env: Env) {
-        env.storage().instance().set(&symbol_short!("value"), &0_i64);
+        env.storage()
+            .instance()
+            .set(&symbol_short!("value"), &0_i64);
     }
 
     pub fn set_value(env: Env, value: i64) {
-        env.storage().instance().set(&symbol_short!("value"), &value);
+        env.storage()
+            .instance()
+            .set(&symbol_short!("value"), &value);
     }
 
     pub fn get_value(env: Env) -> i64 {

@@ -1,9 +1,13 @@
-use soroban_sdk::{testutils::{Address as _, Ledger as _}, Address, BytesN, Env, Vec};
+use soroban_sdk::{
+    testutils::{Address as _, Ledger as _},
+    Address, BytesN, Env, Vec,
+};
 
 use crate::types::{GovernancePolicy, ProposalKind, ProposalState, UpgradeControllerProposal};
 use crate::{UpgradeController, UpgradeControllerClient};
 
-const CONTROLLER_WASM: &[u8] = include_bytes!("../../../../fixtures/wasm/upgrade_controller_v1.wasm");
+const CONTROLLER_WASM: &[u8] =
+    include_bytes!("../../../../fixtures/wasm/upgrade_controller_v1.wasm");
 
 #[test]
 fn self_upgrade_is_governed_and_invalid_wasm_rolls_back() {
@@ -36,7 +40,9 @@ fn self_upgrade_is_governed_and_invalid_wasm_rolls_back() {
         new_wasm_hash: real_hash.clone(),
         manifest_hash: manifest_hash.clone(),
     });
-    assert!(client.try_create_proposal(&approver, &nonsequential).is_err());
+    assert!(client
+        .try_create_proposal(&approver, &nonsequential)
+        .is_err());
 
     let missing = ProposalKind::UpgradeController(UpgradeControllerProposal {
         expected_controller_version: 1,
@@ -46,7 +52,8 @@ fn self_upgrade_is_governed_and_invalid_wasm_rolls_back() {
     });
     let missing_id = client.create_proposal(&approver, &missing);
     client.approve(&missing_id, &approver);
-    env.ledger().set_sequence_number(env.ledger().sequence() + 3);
+    env.ledger()
+        .set_sequence_number(env.ledger().sequence() + 3);
     assert!(client.try_execute_proposal(&missing_id).is_err());
     assert_eq!(client.get_controller_version(), 1);
     assert_eq!(client.get_proposal_state(&missing_id), ProposalState::Ready);
@@ -59,8 +66,12 @@ fn self_upgrade_is_governed_and_invalid_wasm_rolls_back() {
     });
     let valid_id = client.create_proposal(&approver, &valid);
     client.approve(&valid_id, &approver);
-    env.ledger().set_sequence_number(env.ledger().sequence() + 3);
+    env.ledger()
+        .set_sequence_number(env.ledger().sequence() + 3);
     client.execute_proposal(&valid_id);
     assert_eq!(client.get_controller_version(), 2);
-    assert_eq!(client.get_proposal_state(&valid_id), ProposalState::Executed);
+    assert_eq!(
+        client.get_proposal_state(&valid_id),
+        ProposalState::Executed
+    );
 }

@@ -57,7 +57,9 @@ fn creates_distinct_proposals_without_implicit_approval() {
 fn rejects_nonapprover_and_invalid_payloads() {
     let (env, id, approver, outsider) = setup();
     let client = UpgradeControllerClient::new(&env, &id);
-    assert!(client.try_create_proposal(&outsider, &create_fleet(&env)).is_err());
+    assert!(client
+        .try_create_proposal(&outsider, &create_fleet(&env))
+        .is_err());
 
     let ProposalKind::CreateFleet(mut payload) = create_fleet(&env) else {
         unreachable!();
@@ -78,7 +80,9 @@ fn rejects_nonapprover_and_invalid_payloads() {
         new_wasm_hash: BytesN::from_array(&env, &[4; 32]),
         manifest_hash: BytesN::from_array(&env, &[3; 32]),
     });
-    assert!(client.try_create_proposal(&approver, &missing_fleet).is_err());
+    assert!(client
+        .try_create_proposal(&approver, &missing_fleet)
+        .is_err());
 
     let mut invalid_policy = client.get_policy();
     invalid_policy.threshold = 0;
@@ -97,7 +101,9 @@ fn rejects_nonapprover_and_invalid_payloads() {
         new_wasm_hash: BytesN::from_array(&env, &[4; 32]),
         manifest_hash: BytesN::from_array(&env, &[3; 32]),
     });
-    assert!(client.try_create_proposal(&approver, &invalid_version).is_err());
+    assert!(client
+        .try_create_proposal(&approver, &invalid_version)
+        .is_err());
 }
 
 #[test]

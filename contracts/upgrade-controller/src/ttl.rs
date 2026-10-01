@@ -15,7 +15,10 @@ pub const MIN_TTL_EXTENSION: u32 = 17_280;
 pub const MAX_TTL_EXTENSION: u32 = 3_110_400;
 
 fn target(env: &Env, preferred: u32) -> u32 {
-    core::cmp::min(preferred, core::cmp::min(env.storage().max_ttl(), MAX_TTL_EXTENSION))
+    core::cmp::min(
+        preferred,
+        core::cmp::min(env.storage().max_ttl(), MAX_TTL_EXTENSION),
+    )
 }
 
 pub(crate) fn maintain_controller(env: &Env) -> Result<(), ContractError> {
@@ -44,13 +47,22 @@ pub(crate) fn maintain_fleet(env: &Env, id: &BytesN<32>) -> Result<(), ContractE
         return Err(ContractError::TtlConfigurationInvalid);
     }
     env.storage().persistent().extend_ttl_with_limits(
-        &DataKey::Fleet(id.clone()), extend_to, MIN_TTL_EXTENSION, MAX_TTL_EXTENSION,
+        &DataKey::Fleet(id.clone()),
+        extend_to,
+        MIN_TTL_EXTENSION,
+        MAX_TTL_EXTENSION,
     );
     env.storage().persistent().extend_ttl_with_limits(
-        &DataKey::FleetByTag(fleet.tag.clone()), extend_to, MIN_TTL_EXTENSION, MAX_TTL_EXTENSION,
+        &DataKey::FleetByTag(fleet.tag.clone()),
+        extend_to,
+        MIN_TTL_EXTENSION,
+        MAX_TTL_EXTENSION,
     );
     env.executable_refs().extend_ttl_with_limits(
-        &fleet.tag, extend_to, MIN_TTL_EXTENSION, MAX_TTL_EXTENSION,
+        &fleet.tag,
+        extend_to,
+        MIN_TTL_EXTENSION,
+        MAX_TTL_EXTENSION,
     );
     Ok(())
 }
@@ -68,7 +80,10 @@ pub(crate) fn maintain_proposal(env: &Env, id: u64) -> Result<(), ContractError>
         return Err(ContractError::TtlConfigurationInvalid);
     }
     env.storage().persistent().extend_ttl_with_limits(
-        &DataKey::Proposal(id), extend_to, MIN_TTL_EXTENSION, MAX_TTL_EXTENSION,
+        &DataKey::Proposal(id),
+        extend_to,
+        MIN_TTL_EXTENSION,
+        MAX_TTL_EXTENSION,
     );
     if proposal.status == StoredProposalStatus::Active
         && proposal.governance_epoch == storage::epoch(env).ok_or(ContractError::InvalidPolicy)?
@@ -77,7 +92,10 @@ pub(crate) fn maintain_proposal(env: &Env, id: u64) -> Result<(), ContractError>
         for approver in policy.approvers.iter() {
             if storage::has_approval(env, id, &approver) {
                 env.storage().persistent().extend_ttl_with_limits(
-                    &DataKey::Approval(id, approver), extend_to, MIN_TTL_EXTENSION, MAX_TTL_EXTENSION,
+                    &DataKey::Approval(id, approver),
+                    extend_to,
+                    MIN_TTL_EXTENSION,
+                    MAX_TTL_EXTENSION,
                 );
             }
         }

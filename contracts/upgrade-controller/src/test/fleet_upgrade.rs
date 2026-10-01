@@ -5,9 +5,7 @@ use soroban_sdk::{
     Vec,
 };
 
-use crate::types::{
-    CreateFleetProposal, GovernancePolicy, ProposalKind, UpgradeFleetProposal,
-};
+use crate::types::{CreateFleetProposal, GovernancePolicy, ProposalKind, UpgradeFleetProposal};
 use crate::{UpgradeController, UpgradeControllerClient};
 
 const V1_WASM: &[u8] = include_bytes!("../../../../fixtures/wasm/fleet_v1.wasm");
@@ -41,7 +39,8 @@ fn approve_and_execute(
     client.approve(&id, first);
     client.approve(&id, second);
     assert!(client.try_execute_proposal(&id).is_err());
-    env.ledger().set_sequence_number(env.ledger().sequence() + 3);
+    env.ledger()
+        .set_sequence_number(env.ledger().sequence() + 3);
     client.execute_proposal(&id);
 }
 
@@ -85,8 +84,16 @@ fn uploaded_wasm_creates_reference_and_upgrades_two_instances() {
         env.invoke_contract::<u32>(&instance_b, &symbol_short!("version"), vec![&env]),
         1
     );
-    env.invoke_contract::<()>(&instance_a, &symbol_short!("set_value"), vec![&env, 7_i64.into_val(&env)]);
-    env.invoke_contract::<()>(&instance_b, &symbol_short!("set_value"), vec![&env, 9_i64.into_val(&env)]);
+    env.invoke_contract::<()>(
+        &instance_a,
+        &symbol_short!("set_value"),
+        vec![&env, 7_i64.into_val(&env)],
+    );
+    env.invoke_contract::<()>(
+        &instance_b,
+        &symbol_short!("set_value"),
+        vec![&env, 9_i64.into_val(&env)],
+    );
 
     let upgrade = ProposalKind::UpgradeFleet(UpgradeFleetProposal {
         fleet_id: fleet_id.clone(),
@@ -106,7 +113,11 @@ fn uploaded_wasm_creates_reference_and_upgrades_two_instances() {
             env.invoke_contract::<i64>(&instance, &symbol_short!("get_value"), vec![&env]),
             expected_value
         );
-        assert!(env.invoke_contract::<bool>(&instance, &Symbol::new(&env, "is_positive"), vec![&env]));
+        assert!(env.invoke_contract::<bool>(
+            &instance,
+            &Symbol::new(&env, "is_positive"),
+            vec![&env]
+        ));
     }
 }
 
@@ -124,7 +135,8 @@ fn missing_uploaded_wasm_rolls_back_fleet_creation() {
     let id = client.create_proposal(&first, &kind);
     client.approve(&id, &first);
     client.approve(&id, &second);
-    env.ledger().set_sequence_number(env.ledger().sequence() + 3);
+    env.ledger()
+        .set_sequence_number(env.ledger().sequence() + 3);
     assert!(client.try_execute_proposal(&id).is_err());
     assert!(client.try_get_fleet(&fleet_id).is_err());
     assert_eq!(

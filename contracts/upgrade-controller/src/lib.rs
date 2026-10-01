@@ -5,15 +5,15 @@ use soroban_sdk::{contract, contractimpl, Address, BytesN, Env};
 use crate::errors::ContractError;
 use crate::types::{Fleet, GovernancePolicy, Proposal, ProposalKind, ProposalState};
 
-pub mod types;
+pub mod approvals;
 pub mod errors;
-pub mod storage;
+pub mod events;
+pub mod fleets;
 pub mod policy;
 pub mod proposals;
-pub mod events;
-pub mod approvals;
-pub mod fleets;
+pub mod storage;
 pub mod ttl;
+pub mod types;
 
 #[cfg(test)]
 mod test;
@@ -76,10 +76,7 @@ impl UpgradeController {
         storage::proposal(&env, proposal_id).ok_or(ContractError::ProposalNotFound)
     }
 
-    pub fn get_proposal_state(
-        env: Env,
-        proposal_id: u64,
-    ) -> Result<ProposalState, ContractError> {
+    pub fn get_proposal_state(env: Env, proposal_id: u64) -> Result<ProposalState, ContractError> {
         proposals::state(&env, proposal_id)
     }
 
@@ -105,10 +102,7 @@ impl UpgradeController {
         storage::fleet(&env, &fleet_id).ok_or(ContractError::FleetNotFound)
     }
 
-    pub fn get_current_wasm(
-        env: Env,
-        fleet_id: BytesN<32>,
-    ) -> Result<BytesN<32>, ContractError> {
+    pub fn get_current_wasm(env: Env, fleet_id: BytesN<32>) -> Result<BytesN<32>, ContractError> {
         fleets::current_wasm(&env, &fleet_id)
     }
 

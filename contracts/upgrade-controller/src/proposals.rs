@@ -1,8 +1,10 @@
 use soroban_sdk::{Address, BytesN, ContractExecutable, Env, String};
 
-use crate::errors::ContractError;
-use crate::events::{ControllerUpgraded, PolicyUpdated, ProposalCancelled, ProposalCreated, ProposalExecuted};
 use crate::approvals;
+use crate::errors::ContractError;
+use crate::events::{
+    ControllerUpgraded, PolicyUpdated, ProposalCancelled, ProposalCreated, ProposalExecuted,
+};
 use crate::fleets;
 use crate::policy::{self, PROPOSAL_TTL_SAFETY_BUFFER};
 use crate::storage;
@@ -45,8 +47,8 @@ fn validate_kind(env: &Env, kind: &ProposalKind) -> Result<(), ContractError> {
             if !nonzero(env, &payload.manifest_hash) {
                 return Err(ContractError::InvalidManifestHash);
             }
-            let fleet = storage::fleet(env, &payload.fleet_id)
-                .ok_or(ContractError::FleetNotFound)?;
+            let fleet =
+                storage::fleet(env, &payload.fleet_id).ok_or(ContractError::FleetNotFound)?;
             let current = env
                 .executable_refs()
                 .get(&fleet.tag)
@@ -234,9 +236,8 @@ pub(crate) fn execute(env: &Env, id: u64) -> Result<(), ContractError> {
                 return Err(ContractError::InvalidControllerVersion);
             }
             storage::set_version(env, next);
-            env.deployer().update_current_contract(ContractExecutable::Wasm(
-                payload.new_wasm_hash.clone(),
-            ));
+            env.deployer()
+                .update_current_contract(ContractExecutable::Wasm(payload.new_wasm_hash.clone()));
             ControllerUpgraded {
                 proposal_id: id,
                 new_controller_version: next,

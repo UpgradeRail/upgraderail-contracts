@@ -18,7 +18,11 @@ impl FleetV2Migration {
         if env.storage().instance().has(&symbol_short!("state")) {
             return false;
         }
-        let Some(value) = env.storage().instance().get::<_, i64>(&symbol_short!("value")) else {
+        let Some(value) = env
+            .storage()
+            .instance()
+            .get::<_, i64>(&symbol_short!("value"))
+        else {
             return false;
         };
         env.storage().instance().set(

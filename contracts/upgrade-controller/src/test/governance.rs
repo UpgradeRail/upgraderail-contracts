@@ -1,4 +1,7 @@
-use soroban_sdk::{testutils::{Address as _, Ledger as _}, Address, BytesN, Env, String, Vec};
+use soroban_sdk::{
+    testutils::{Address as _, Ledger as _},
+    Address, BytesN, Env, String, Vec,
+};
 
 use crate::types::{
     CreateFleetProposal, GovernancePolicy, ProposalKind, ProposalState, UpdatePolicyProposal,
@@ -45,7 +48,8 @@ fn policy_update_stales_old_proposals_and_changes_approvers() {
     );
     client.approve(&update, &first);
     client.approve(&update, &second);
-    env.ledger().set_sequence_number(env.ledger().sequence() + 3);
+    env.ledger()
+        .set_sequence_number(env.ledger().sequence() + 3);
     client.execute_proposal(&update);
 
     assert_eq!(client.get_governance_epoch(), 2);
@@ -54,7 +58,12 @@ fn policy_update_stales_old_proposals_and_changes_approvers() {
     assert!(client.try_approve(&old, &replacement).is_err());
     assert!(client.try_execute_proposal(&old).is_err());
     assert!(client
-        .try_create_proposal(&first, &ProposalKind::UpdatePolicy(UpdatePolicyProposal { policy: client.get_policy() }))
+        .try_create_proposal(
+            &first,
+            &ProposalKind::UpdatePolicy(UpdatePolicyProposal {
+                policy: client.get_policy()
+            })
+        )
         .is_err());
     let fresh = client.create_proposal(
         &replacement,
