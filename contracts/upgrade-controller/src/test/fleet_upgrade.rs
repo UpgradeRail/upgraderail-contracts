@@ -63,6 +63,14 @@ fn uploaded_wasm_creates_reference_and_upgrades_two_instances() {
     approve_and_execute(&env, &client, create_id, &first, &second);
     assert_eq!(client.get_fleet(&fleet_id).tag, tag);
     assert_eq!(client.get_current_wasm(&fleet_id), initial);
+    assert!(client.try_create_proposal(&first, &create).is_err());
+    let reused_tag = ProposalKind::CreateFleet(CreateFleetProposal {
+        fleet_id: BytesN::from_array(&env, &[6; 32]),
+        tag: tag.clone(),
+        initial_wasm_hash: initial.clone(),
+        manifest_hash: BytesN::from_array(&env, &[3; 32]),
+    });
+    assert!(client.try_create_proposal(&first, &reused_tag).is_err());
 
     let deploy = |salt: [u8; 32]| {
         env.as_contract(&controller, || {
@@ -103,8 +111,13 @@ fn uploaded_wasm_creates_reference_and_upgrades_two_instances() {
         manifest_hash: BytesN::from_array(&env, &[4; 32]),
     });
     let upgrade_id = client.create_proposal(&first, &upgrade);
+    let outdated_id = client.create_proposal(&first, &upgrade);
     approve_and_execute(&env, &client, upgrade_id, &first, &second);
     assert_eq!(client.get_current_wasm(&fleet_id), next);
+    client.approve(&outdated_id, &first);
+    client.approve(&outdated_id, &second);
+    env.ledger().set_sequence_number(env.ledger().sequence() + 3);
+    assert!(client.try_execute_proposal(&outdated_id).is_err());
     for (instance, expected_value) in [(instance_a, 7_i64), (instance_b, 9_i64)] {
         assert_eq!(
             env.invoke_contract::<u32>(&instance, &symbol_short!("version"), vec![&env]),
