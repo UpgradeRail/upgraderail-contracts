@@ -99,3 +99,23 @@ fn rejects_nonapprover_and_invalid_payloads() {
     });
     assert!(client.try_create_proposal(&approver, &invalid_version).is_err());
 }
+
+#[test]
+fn proposer_can_cancel_only_before_threshold() {
+    let (env, id, proposer, outsider) = setup();
+    let client = UpgradeControllerClient::new(&env, &id);
+    let first = client.create_proposal(&proposer, &create_fleet(&env));
+    assert!(client.try_cancel_proposal(&first, &outsider).is_err());
+    client.cancel_proposal(&first, &proposer);
+    assert_eq!(
+        client.get_proposal_state(&first),
+        crate::types::ProposalState::Cancelled
+    );
+    assert!(client.try_approve(&first, &proposer).is_err());
+
+    let second = client.create_proposal(&proposer, &create_fleet(&env));
+    let other_approver = client.get_policy().approvers.get(1).unwrap();
+    client.approve(&second, &proposer);
+    client.approve(&second, &other_approver);
+    assert!(client.try_cancel_proposal(&second, &proposer).is_err());
+}
