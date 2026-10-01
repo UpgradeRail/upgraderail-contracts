@@ -166,3 +166,13 @@ fn lifecycle_state_changes_at_timelock_and_expiry_boundaries() {
     );
     assert!(client.try_execute_proposal(&proposal_id).is_err());
 }
+
+#[test]
+fn proposal_creation_rejects_nonce_overflow() {
+    let (env, contract, proposer, _) = setup();
+    let client = UpgradeControllerClient::new(&env, &contract);
+    env.as_contract(&contract, || storage::set_nonce(&env, u64::MAX));
+    assert!(client
+        .try_create_proposal(&proposer, &create_fleet(&env))
+        .is_err());
+}
