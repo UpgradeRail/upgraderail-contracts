@@ -1,4 +1,4 @@
-use soroban_sdk::{testutils::Address as _, Address, BytesN, Env, String, Vec};
+use soroban_sdk::{testutils::{Address as _, Ledger as _}, Address, BytesN, Env, String, Vec};
 
 use crate::storage;
 use crate::types::{
@@ -124,4 +124,28 @@ fn proposer_can_cancel_only_before_threshold() {
     client.approve(&second, &proposer);
     client.approve(&second, &other_approver);
     assert!(client.try_cancel_proposal(&second, &proposer).is_err());
+}
+
+#[test]
+fn lifecycle_state_changes_at_timelock_and_expiry_boundaries() {
+    let (env, id, approver, _) = setup();
+    let client = UpgradeControllerClient::new(&env, &id);
+    let proposal_id = client.create_proposal(&approver, &create_fleet(&env));
+    assert_eq!(
+        client.get_proposal_state(&proposal_id),
+        crate::types::ProposalState::AwaitingApprovals
+    );
+    let second = client.get_policy().approvers.get(1).unwrap();
+    client.approve(&proposal_id, &approver);
+    client.approve(&proposal_id, &second);
+    let stored = client.get_proposal(&proposal_id);
+    assert_eq!(client.get_proposal_state(&proposal_id), crate::types::ProposalState::Timelocked);
+
+    env.ledger().set_sequence_number(stored.execute_after_ledger.unwrap() - 1);
+    assert_eq!(client.get_proposal_state(&proposal_id), crate::types::ProposalState::Timelocked);
+    env.ledger().set_sequence_number(stored.execute_after_ledger.unwrap());
+    assert_eq!(client.get_proposal_state(&proposal_id), crate::types::ProposalState::Ready);
+    env.ledger().set_sequence_number(stored.expires_ledger);
+    assert_eq!(client.get_proposal_state(&proposal_id), crate::types::ProposalState::Expired);
+    assert!(client.try_execute_proposal(&proposal_id).is_err());
 }
