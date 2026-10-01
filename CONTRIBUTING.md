@@ -1,6 +1,6 @@
 # Contributing to UpgradeRail Contracts
 
-This repository contains one production contract, `UpgradeController`, and four fixture contracts used to test executable changes. Keep changes focused on governed CAP-85 upgrades. Static analysis, simulation, the API, and the console live in other UpgradeRail repositories.
+This repository contains one production contract, `UpgradeController`, four executable fixtures, and one external-reference factory used for live verification. Keep changes focused on governed CAP-85 upgrades. Static analysis, simulation, the API, and the console live in other UpgradeRail repositories.
 
 ## Toolchain
 
@@ -29,7 +29,7 @@ Tests load the committed binaries in `fixtures/wasm`. These files are intentiona
 
 ## Testnet deployment
 
-The deployment script requires `STELLAR_SOURCE` to name a funded Stellar CLI identity and `UPGRADERAIL_POLICY_JSON` to contain the real constructor policy. Do not put secret keys or seed phrases in the repository. The script checks that Testnet is at Protocol 28 before it sends a transaction. Testnet reported Protocol 29 on October 1, 2026, so deployment currently stops. Any protocol migration needs a separate compatibility review and validation.
+The deployment script requires `STELLAR_SOURCE` to name a funded Stellar CLI identity and `UPGRADERAIL_POLICY_JSON` to contain the real constructor policy. Do not put secret keys or seed phrases in the repository. It checks the live Testnet protocol and accepts Protocol 28 or the Protocol 29 path verified on October 1, 2026, using CLI 28.1.0 and SDK 28 WASM. A later protocol requires another compatibility check. See the [Testnet deployment record](deployments/testnet.json) for the real Protocol 29 verification. Mainnet remains a Protocol 28 target.
 
 ## Git and review
 

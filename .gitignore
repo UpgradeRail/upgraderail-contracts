@@ -1,4 +1,4 @@
 /target/
 /.env
-/deployments/*.json
+/deployments/*.local.json
 **/test_snapshots/

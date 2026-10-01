@@ -2,7 +2,7 @@
 
 ## Supported version
 
-The v1 development line uses Soroban SDK 28.0.0 and targets Protocol 28. There is no Mainnet deployment in this repository. Testnet reported Protocol 29 on October 1, 2026, so the Protocol 28 deployment script stops before sending a transaction.
+The v1 development line uses Soroban SDK 28.0.0 and targets Mainnet Protocol 28. There is no Mainnet deployment in this repository. The SDK 28 WASM was deployed and exercised on Protocol 29 Testnet on October 1, 2026; see [deployment evidence](deployments/testnet.json). The Testnet policy is for verification only.
 
 ## Reporting a vulnerability
 
@@ -22,7 +22,7 @@ No independent security audit has been completed. Passing tests and WASM builds 
 - Approval records and proposal records must remain live together until the proposal expires. The contract extends their TTL, and permissionless maintenance methods allow any fee payer to extend them. Archived entries require restoration before use.
 - Fleet metadata and CAP-85 reference entries have coordinated TTL maintenance. Uploaded WASM code has its own TTL and must also be maintained by operators. Keeping the reference live alone does not guarantee that the code remains available.
 - Soroban authorization is checked with `require_auth` for proposal creation, approval, revocation, and cancellation. Execution and TTL maintenance are permissionless by design.
-- A deployment operator must confirm the live network protocol and configuration. Protocol 28 binaries have not been validated for Protocol 29 Testnet execution.
+- A deployment operator must confirm the live network protocol and configuration. The SDK 28 WASM was validated on Protocol 29 Testnet with Stellar CLI 28.1.0, but a later protocol requires a fresh compatibility check.
 
 ## Timelock and expiry
 

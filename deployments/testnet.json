@@ -1,0 +1,94 @@
+{
+  "network": "testnet",
+  "network_passphrase": "Test SDF Network ; September 2015",
+  "observed_protocol": 29,
+  "contract_sdk": "soroban-sdk 28.0.0",
+  "production_target": "Mainnet Protocol 28",
+  "deployment_cli": "stellar 28.1.0",
+  "live_rpc_version": "29.0.0-b2b701685c79aee17fe4eb22dbd08a5dfd11594d",
+  "source_commit_at_controller_deployment": "430e67f1327d0daae4d1db9e2e5064beed42bb8c",
+  "deployer": "GB6NGKUWJFXWAVE5K3UNLGTPTBGD3TDVOZAA3ITOBIMUR25SGMLGKRA6",
+  "approver_1": "GBPU3GJ7P72CP4JSY25WERJRTLYFGKOLENGDBRZKBRRLHCUEBDZ7FSDL",
+  "approver_2": "GBF5SV2NCEWJ36A6S2E5B6EDFDQKHG6LKYUYAXS2K5OKI2ZLLOR7PLAY",
+  "policy": {
+    "approvers": [
+      "GBPU3GJ7P72CP4JSY25WERJRTLYFGKOLENGDBRZKBRRLHCUEBDZ7FSDL",
+      "GBF5SV2NCEWJ36A6S2E5B6EDFDQKHG6LKYUYAXS2K5OKI2ZLLOR7PLAY"
+    ],
+    "threshold": 2,
+    "timelock_ledgers": 12,
+    "proposal_lifetime_ledgers": 720
+  },
+  "controller": {
+    "contract_id": "CCMC4WGOCRU34RYO4YK64QVDNOMJBS27SBHH42ARQ7NOCQPZMRZMSLR3",
+    "wasm_hash": "0ac2626c26b43f5330bf89cfdd952ecdd9940817a703ec04c327f478f5f20458",
+    "initial_governance_epoch": 1,
+    "initial_controller_version": 1
+  },
+  "fleet": {
+    "id": "8863397c695ebe1dd9f1922afd511aee68999753d13cd61345767487564dc820",
+    "tag": "upgraderail-testnet-shared",
+    "create_manifest_preimage": "UpgradeRail Testnet create fleet v1 2026-10-01",
+    "create_manifest_hash": "7d0110e00fd660f93d8b7455fbb963394696e7f22d53469de2b3be559f9e9b31",
+    "upgrade_manifest_preimage": "UpgradeRail Testnet upgrade fleet v1 to compatible v2 2026-10-01",
+    "upgrade_manifest_hash": "cd8b679e2215a53c3bda375de6112d0d3c0203d017dfcdcfa5e1a63ef6ef088a",
+    "v1_wasm_hash": "ff072681e62f66bc4350a9a608a53389ca66440645cd244084ff04297dc0c3ff",
+    "v2_wasm_hash": "67a657dd6c64f4255f5e928782a058aaeff30c14c7ca530d2604c554d30d76c7",
+    "final_current_wasm_hash": "67a657dd6c64f4255f5e928782a058aaeff30c14c7ca530d2604c554d30d76c7",
+    "created_ledger": 4969465,
+    "create_proposal_id": 1,
+    "create_proposal_final_state": "Executed",
+    "create_approved_ledger": 4969445,
+    "create_execute_after_ledger": 4969457,
+    "upgrade_proposal_id": 2,
+    "upgrade_proposal_final_state": "Executed",
+    "upgrade_approved_ledger": 4969509,
+    "upgrade_execute_after_ledger": 4969521
+  },
+  "external_ref_factory": {
+    "contract_id": "CBDEY6U6QUZBEE3KSA2POOPBRDJYO5T2CXFA3KR6D2UU5PFBXXS4Y5VG",
+    "wasm_hash": "d65d91c84951cb6bde90491f54f33b57bdf15b0a7d21e20c8b2203ea8ad95ff2"
+  },
+  "shared_reference_instances": [
+    {
+      "contract_id": "CCDDHPB3FLFL5DRYKK4KIYKZJ2HBDNADNQV43PCOENYFBPSVXDHUCQ7N",
+      "version_before_upgrade": 1,
+      "version_after_upgrade": 2,
+      "value_before_and_after_upgrade": 7,
+      "is_positive_after_upgrade": true
+    },
+    {
+      "contract_id": "CCQEQBQCDEJ3DWQCIDOFJDUMVLEUF5BXSYMNME6RNGJ3EDTTIGKH7NWQ",
+      "version_before_upgrade": 1,
+      "version_after_upgrade": 2,
+      "value_before_and_after_upgrade": 9,
+      "is_positive_after_upgrade": true
+    }
+  ],
+  "rejected_execution_simulations": [
+    {"proposal_id": 1, "stage": "one approval", "contract_error": 56, "error_name": "ThresholdNotMet"},
+    {"proposal_id": 1, "stage": "immediately after second approval", "contract_error": 58, "error_name": "TimelockNotElapsed"},
+    {"proposal_id": 2, "stage": "one approval", "contract_error": 56, "error_name": "ThresholdNotMet"},
+    {"proposal_id": 2, "stage": "immediately after second approval", "contract_error": 58, "error_name": "TimelockNotElapsed"}
+  ],
+  "transactions": {
+    "controller_upload": {"hash": "8173365c8fd7810c109dc58fe1b4ef54735c7140d73cfdf63454c9e1a3b5053c", "ledger": 4969406},
+    "controller_deploy": {"hash": "b5d2cd6e3acff3c0fb26973e99c021e529fb014493aeb97de0a33196f777867c", "ledger": 4969408},
+    "fleet_v1_upload": {"hash": "d22829e86442e585eb0dcf5af90d022c6e77353373fd5235d67791ba58ed3d3a", "ledger": 4969418},
+    "fleet_v2_upload": {"hash": "c9f4e9c68545d77728e38f0594a63eb8093d4de5a0aabfccb8589950e30b72df", "ledger": 4969421},
+    "create_proposal": {"hash": "9f9099355c9d4d6a7867aa40f97fb4c6b9ce2a3e8a13d8060b5b2883e657bf15", "ledger": 4969431},
+    "create_approve_1": {"hash": "feb1b63a00dbeb66b6f23a6c7f1911ff262807a2c96528dd11ae5f479bc2e9af", "ledger": 4969435},
+    "create_approve_2": {"hash": "7094f343529971f6617b833b3614758b2e7d1458ee18d92d446f7a16958c3a94", "ledger": 4969445},
+    "create_execute": {"hash": "a75b3c814f5411c550a3d0b95177bc8a163e94e7a357e78932b0ef3b67484551", "ledger": 4969465},
+    "factory_upload": {"hash": "1881686ae4016e059efb03937843d67f1edee9b5880e501003e7830ac0f7ef19", "ledger": 4969473},
+    "factory_deploy": {"hash": "23af21702441e481115baf186b451273fa23dd443f283de6d4a7e88b7678c896", "ledger": 4969475},
+    "instance_1_deploy": {"hash": "2ace9346666b7a208cc1e57c572797b8096b3bf0da32aa2392258cfd2e686067", "ledger": 4969479},
+    "instance_2_deploy": {"hash": "7c49b367604ee374351612f765327fe25ff4002864161461d4dc0514fd71f752", "ledger": 4969484},
+    "instance_1_set_value": {"hash": "726f5c934c4d3bbfc0d3d7e43e64214f27eaca966b70bf0204808860de86e85c", "ledger": 4969492},
+    "instance_2_set_value": {"hash": "67973271be7b64bb3379f878bba1ec3eb0f05325838558adbb1a50bd83430299", "ledger": 4969495},
+    "upgrade_proposal": {"hash": "355993afe5ee91b4211633ca2466110ff6c9e8c4302b01e423839d84fd03d079", "ledger": 4969499},
+    "upgrade_approve_1": {"hash": "e7ff8f08c2133490179d839c2479e52896f8f40522624453ec51e1d9038bb437", "ledger": 4969503},
+    "upgrade_approve_2": {"hash": "1bf12ae49399e6f0ae4022d4c6512f4f0f0a8fc6e0c07159934ae1bb68a7691d", "ledger": 4969509},
+    "upgrade_execute": {"hash": "dc2b87c84bf33548ce2d4e5cdcea40cc72849d52c704c663cf8959512c588569", "ledger": 4969524}
+  }
+}

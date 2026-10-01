@@ -56,9 +56,19 @@ The deployment scripts use a Stellar CLI identity. Set `STELLAR_SOURCE` to a fun
 ./scripts/deploy-testnet.sh
 ```
 
-The script builds the controller, deploys it with the policy constructor argument, checks its WASM hash and initial version, then writes a local `deployments/testnet.json` record after success. It leaves unavailable transaction and deployment ledger fields null rather than inventing evidence. `scripts/verify-deployment.sh` can check an initial deployment again when given its contract ID and expected hash.
+The script builds the controller, deploys it with the policy constructor argument, checks its WASM hash and initial version, then writes a local `deployments/testnet.local.json` record after success. Set `UPGRADERAIL_RECORD_PATH` to choose another new file; the script refuses to overwrite an existing record. It leaves unavailable transaction and deployment ledger fields null rather than inventing evidence. `scripts/verify-deployment.sh` can check an initial deployment again when given its contract ID and expected hash. The committed [Testnet deployment record](deployments/testnet.json) includes the complete live verification and RPC transaction receipts.
 
-**Testnet reported Protocol 29 on October 1, 2026.** This repository and Stellar CLI are pinned to Protocol 28. The deployment script currently stops before submitting any transaction. No Testnet or Mainnet deployment is claimed. A Protocol 29 migration requires separate compatibility work and validation.
+### Compatibility verified October 1, 2026
+
+| Path | Network protocol | Contract SDK and WASM | CLI | RPC | Result |
+| --- | --- | --- | --- | --- | --- |
+| Production target | Mainnet Protocol 28 | `soroban-sdk 28.0.0` | 28.1.0 | v28.0.1 | Protocol 28 baseline; no Mainnet deployment claimed |
+| Local integration | Protocol 28 test host | `soroban-sdk 28.0.0` | 28.1.0 build | Local SDK host | 21 tests, including CAP-85 shared-reference upgrades, pass |
+| Live Testnet | Protocol 29 | Same SDK 28 WASM | 28.1.0 | Public RPC reports `29.0.0-b2b701685c79aee17fe4eb22dbd08a5dfd11594d` | Upload, deploy, invoke, two-approver governance, timelock, and shared-reference upgrade succeeded |
+
+The [official software versions page](https://developers.stellar.org/docs/networks/software-versions) lists the Protocol 28 Mainnet versions. At verification time, the newest officially published [CLI release](https://github.com/stellar/stellar-cli/releases/tag/v28.1.0) was 28.1.0 and the newest officially published [RPC release](https://github.com/stellar/stellar-rpc/releases/tag/v28.0.1) was v28.0.1. No official CLI or RPC 29 release was published. The live public Testnet RPC reported Protocol 29 and its own 29.0.0 build through `getVersionInfo`. CLI 28.1.0 successfully submitted and read SDK 28 WASM on that live network, so a newer deployment CLI was not required for this verification. The deployment script accepts only live Protocol 28 or the tested Protocol 29 with CLI 28.1.0; a later protocol requires another live compatibility check. The contract and Mainnet target remain Protocol 28.
+
+The Testnet verification policy is intentionally short lived: two dedicated approvers, a 2-of-2 threshold, a 12-ledger timelock, and a 720-ledger proposal lifetime. It is not a Mainnet policy. A dedicated SDK 28 [external-reference factory](fixtures/external-ref-factory/src/lib.rs) created two live instances of the same CAP-85 fleet. Both changed from v1 to v2 after governance execution and retained their separate instance values. The public addresses, transaction hashes, ledger numbers, contract IDs, WASM hashes, and rejected early execution results are recorded in the deployment record. Secret keys are not recorded.
 
 ## Security and limits
 

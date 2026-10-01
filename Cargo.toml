@@ -6,6 +6,7 @@ members = [
     "fixtures/fleet-v2-compatible",
     "fixtures/fleet-v2-breaking",
     "fixtures/fleet-v2-migration",
+    "fixtures/external-ref-factory",
 ]
 
 [workspace.dependencies]
