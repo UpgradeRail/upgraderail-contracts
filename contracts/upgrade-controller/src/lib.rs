@@ -3,6 +3,7 @@
 use soroban_sdk::{contract, contractimpl, Env};
 
 pub mod types;
+pub mod errors;
 
 #[contract]
 pub struct UpgradeController;
