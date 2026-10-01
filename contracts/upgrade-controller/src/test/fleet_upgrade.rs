@@ -5,7 +5,10 @@ use soroban_sdk::{
     Vec,
 };
 
-use crate::types::{CreateFleetProposal, GovernancePolicy, ProposalKind, UpgradeFleetProposal};
+use crate::storage;
+use crate::types::{
+    CreateFleetProposal, Fleet, GovernancePolicy, ProposalKind, UpgradeFleetProposal,
+};
 use crate::{UpgradeController, UpgradeControllerClient};
 
 const V1_WASM: &[u8] = include_bytes!("../../../../fixtures/wasm/fleet_v1.wasm");
@@ -61,7 +64,10 @@ fn uploaded_wasm_creates_reference_and_upgrades_two_instances() {
     });
     let create_id = client.create_proposal(&first, &create);
     approve_and_execute(&env, &client, create_id, &first, &second);
-    assert_eq!(client.get_fleet(&fleet_id).tag, tag);
+    let fleet = client.get_fleet(&fleet_id);
+    assert_eq!(fleet.id, fleet_id);
+    assert_eq!(fleet.tag, tag);
+    assert_eq!(fleet.created_ledger, env.ledger().sequence());
     assert_eq!(client.get_current_wasm(&fleet_id), initial);
     assert!(client.try_create_proposal(&first, &create).is_err());
     let reused_tag = ProposalKind::CreateFleet(CreateFleetProposal {
@@ -158,6 +164,67 @@ fn missing_uploaded_wasm_rolls_back_fleet_creation() {
         client.get_proposal_state(&id),
         crate::types::ProposalState::Ready
     );
+}
+
+#[test]
+fn existing_executable_reference_blocks_fleet_creation() {
+    let (env, controller, first, _) = setup();
+    let client = UpgradeControllerClient::new(&env, &controller);
+    let initial = env.deployer().upload_contract_wasm(V1_WASM);
+    let tag = String::from_str(&env, "reserved-fleet");
+    env.as_contract(&controller, || env.executable_refs().set(&tag, &initial));
+
+    let kind = ProposalKind::CreateFleet(CreateFleetProposal {
+        fleet_id: BytesN::from_array(&env, &[8; 32]),
+        tag,
+        initial_wasm_hash: initial,
+        manifest_hash: BytesN::from_array(&env, &[3; 32]),
+    });
+    assert!(client.try_create_proposal(&first, &kind).is_err());
+}
+
+#[test]
+fn upgrade_rejects_current_candidate_and_missing_reference() {
+    let (env, controller, first, second) = setup();
+    let client = UpgradeControllerClient::new(&env, &controller);
+    let initial = env.deployer().upload_contract_wasm(V1_WASM);
+    let fleet_id = BytesN::from_array(&env, &[9; 32]);
+    let tag = String::from_str(&env, "same-wasm-fleet");
+    let create = ProposalKind::CreateFleet(CreateFleetProposal {
+        fleet_id: fleet_id.clone(),
+        tag,
+        initial_wasm_hash: initial.clone(),
+        manifest_hash: BytesN::from_array(&env, &[3; 32]),
+    });
+    let create_id = client.create_proposal(&first, &create);
+    approve_and_execute(&env, &client, create_id, &first, &second);
+
+    let unchanged = ProposalKind::UpgradeFleet(UpgradeFleetProposal {
+        fleet_id,
+        expected_wasm_hash: initial.clone(),
+        new_wasm_hash: initial.clone(),
+        manifest_hash: BytesN::from_array(&env, &[4; 32]),
+    });
+    assert!(client.try_create_proposal(&first, &unchanged).is_err());
+
+    let orphan_id = BytesN::from_array(&env, &[10; 32]);
+    env.as_contract(&controller, || {
+        storage::set_fleet(
+            &env,
+            &Fleet {
+                id: orphan_id.clone(),
+                tag: String::from_str(&env, "orphan-fleet"),
+                created_ledger: env.ledger().sequence(),
+            },
+        );
+    });
+    let orphan_upgrade = ProposalKind::UpgradeFleet(UpgradeFleetProposal {
+        fleet_id: orphan_id,
+        expected_wasm_hash: initial,
+        new_wasm_hash: BytesN::from_array(&env, &[5; 32]),
+        manifest_hash: BytesN::from_array(&env, &[4; 32]),
+    });
+    assert!(client.try_create_proposal(&first, &orphan_upgrade).is_err());
 }
 
 #[test]

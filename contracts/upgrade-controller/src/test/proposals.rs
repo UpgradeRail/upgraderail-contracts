@@ -77,6 +77,22 @@ fn rejects_nonapprover_and_invalid_payloads() {
         .try_create_proposal(&approver, &ProposalKind::CreateFleet(payload))
         .is_err());
 
+    let ProposalKind::CreateFleet(mut payload) = create_fleet(&env) else {
+        unreachable!();
+    };
+    payload.tag = String::from_str(&env, "a".repeat(65).as_str());
+    assert!(client
+        .try_create_proposal(&approver, &ProposalKind::CreateFleet(payload.clone()))
+        .is_err());
+    payload.tag = String::from_str(&env, "a".repeat(64).as_str());
+    assert!(client
+        .try_create_proposal(&approver, &ProposalKind::CreateFleet(payload.clone()))
+        .is_ok());
+    payload.manifest_hash = BytesN::from_array(&env, &[0; 32]);
+    assert!(client
+        .try_create_proposal(&approver, &ProposalKind::CreateFleet(payload))
+        .is_err());
+
     let missing_fleet = ProposalKind::UpgradeFleet(UpgradeFleetProposal {
         fleet_id: BytesN::from_array(&env, &[9; 32]),
         expected_wasm_hash: BytesN::from_array(&env, &[2; 32]),
@@ -121,6 +137,7 @@ fn proposer_can_cancel_only_before_threshold() {
         crate::types::ProposalState::Cancelled
     );
     assert!(client.try_approve(&first, &proposer).is_err());
+    assert!(client.try_execute_proposal(&first).is_err());
 
     let second = client.create_proposal(&proposer, &create_fleet(&env));
     let other_approver = client.get_policy().approvers.get(1).unwrap();

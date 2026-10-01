@@ -34,9 +34,11 @@ fn threshold_starts_once_and_duplicate_approval_fails() {
         manifest_hash: BytesN::from_array(&env, &[3; 32]),
     });
     let id = client.create_proposal(&first, &kind);
+    assert!(!client.has_approved(&id, &first));
 
     assert!(client.try_approve(&id, &outsider).is_err());
     client.approve(&id, &first);
+    assert!(client.has_approved(&id, &first));
     assert!(client.try_approve(&id, &first).is_err());
     let pending = env.as_contract(&contract, || storage::proposal(&env, id).unwrap());
     assert_eq!(pending.approval_count, 1);
