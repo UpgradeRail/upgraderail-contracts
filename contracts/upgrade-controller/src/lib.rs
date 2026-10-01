@@ -7,6 +7,9 @@ pub mod errors;
 pub mod storage;
 pub mod policy;
 
+#[cfg(test)]
+mod test;
+
 #[contract]
 pub struct UpgradeController;
 
