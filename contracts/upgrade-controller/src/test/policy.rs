@@ -2,7 +2,8 @@ use soroban_sdk::{testutils::Address as _, Address, Env, Vec};
 
 use crate::errors::ContractError;
 use crate::policy::{validate, MAX_APPROVERS, PROPOSAL_TTL_SAFETY_BUFFER};
-use crate::types::GovernancePolicy;
+use crate::types::{GovernancePolicy, ProposalKind, UpdatePolicyProposal};
+use crate::UpgradeControllerClient;
 
 fn policy(env: &Env) -> GovernancePolicy {
     let mut approvers = Vec::new(env);
@@ -89,4 +90,33 @@ fn rejects_invalid_timelock_and_lifetime() {
         validate(&env, &configured),
         Err(ContractError::InvalidProposalLifetime)
     );
+}
+
+#[test]
+fn twenty_approvers_can_complete_threshold_under_test_budget() {
+    let env = Env::default();
+    env.mock_all_auths();
+    let mut configured = policy(&env);
+    configured.approvers = Vec::new(&env);
+    for _ in 0..MAX_APPROVERS {
+        configured.approvers.push_back(Address::generate(&env));
+    }
+    configured.threshold = MAX_APPROVERS;
+    let wasm: &[u8] = include_bytes!("../../../../fixtures/wasm/upgrade_controller_v1.wasm");
+    let contract = env.register(wasm, (&configured,));
+    let client = UpgradeControllerClient::new(&env, &contract);
+    let first = configured.approvers.get(0).unwrap();
+    let id = client.create_proposal(
+        &first,
+        &ProposalKind::UpdatePolicy(UpdatePolicyProposal {
+            policy: configured.clone(),
+        }),
+    );
+    for approver in configured.approvers.iter() {
+        env.budget().reset_tracker();
+        client.approve(&id, &approver);
+        assert!(env.budget().cpu_instruction_cost() < 400_000_000);
+        assert!(env.budget().memory_bytes_cost() < 41_943_040);
+    }
+    assert_eq!(client.get_proposal(&id).approval_count, MAX_APPROVERS);
 }
