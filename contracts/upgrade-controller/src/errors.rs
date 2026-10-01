@@ -19,6 +19,8 @@ pub enum ContractError {
     CurrentWasmMismatch = 34,
     CandidateMatchesCurrent = 35,
     InvalidFleetTag = 36,
+    InvalidWasmHash = 37,
+    InvalidManifestHash = 38,
     ProposalNotFound = 50,
     ProposalNotActive = 51,
     ProposalExpired = 52,

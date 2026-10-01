@@ -1,14 +1,16 @@
 #![no_std]
 
-use soroban_sdk::{contract, contractimpl, Env};
+use soroban_sdk::{contract, contractimpl, Address, Env};
 
 use crate::errors::ContractError;
-use crate::types::GovernancePolicy;
+use crate::types::{GovernancePolicy, ProposalKind};
 
 pub mod types;
 pub mod errors;
 pub mod storage;
 pub mod policy;
+pub mod proposals;
+pub mod events;
 
 #[cfg(test)]
 mod test;
@@ -44,5 +46,13 @@ impl UpgradeController {
     pub fn get_controller_version(env: Env) -> u32 {
         // The constructor writes this key before deployment can complete.
         storage::version(&env).expect("initialized controller version")
+    }
+
+    pub fn create_proposal(
+        env: Env,
+        proposer: Address,
+        kind: ProposalKind,
+    ) -> Result<u64, ContractError> {
+        proposals::create(&env, proposer, kind)
     }
 }
