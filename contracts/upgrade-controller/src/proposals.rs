@@ -4,7 +4,7 @@ use crate::errors::ContractError;
 use crate::events::ProposalCreated;
 use crate::policy::{self, PROPOSAL_TTL_SAFETY_BUFFER};
 use crate::storage;
-use crate::types::{DataKey, Proposal, ProposalKind, StoredProposalStatus};
+use crate::types::{DataKey, Proposal, ProposalKind, ProposalState, StoredProposalStatus};
 
 pub const MAX_FLEET_TAG_BYTES: u32 = 64;
 
@@ -132,4 +132,35 @@ pub(crate) fn create(
     }
     .publish(env);
     Ok(proposal_id)
+}
+
+pub(crate) fn state(env: &Env, id: u64) -> Result<ProposalState, ContractError> {
+    let proposal = storage::proposal(env, id).ok_or(ContractError::ProposalNotFound)?;
+    match proposal.status {
+        StoredProposalStatus::Executed => return Ok(ProposalState::Executed),
+        StoredProposalStatus::Cancelled => return Ok(ProposalState::Cancelled),
+        StoredProposalStatus::Active => {}
+    }
+    if proposal.governance_epoch != storage::epoch(env).ok_or(ContractError::InvalidPolicy)? {
+        return Ok(ProposalState::Stale);
+    }
+    let now = env.ledger().sequence();
+    if now >= proposal.expires_ledger {
+        return Ok(ProposalState::Expired);
+    }
+    let configured = storage::policy(env).ok_or(ContractError::InvalidPolicy)?;
+    if proposal.approval_count < configured.threshold {
+        return Ok(ProposalState::AwaitingApprovals);
+    }
+    let execute_after = proposal
+        .execute_after_ledger
+        .ok_or(ContractError::TimelockNotStarted)?;
+    if proposal.approved_ledger.is_none() {
+        return Err(ContractError::TimelockNotStarted);
+    }
+    if now < execute_after {
+        Ok(ProposalState::Timelocked)
+    } else {
+        Ok(ProposalState::Ready)
+    }
 }

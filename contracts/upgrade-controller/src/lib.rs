@@ -3,7 +3,7 @@
 use soroban_sdk::{contract, contractimpl, Address, Env};
 
 use crate::errors::ContractError;
-use crate::types::{GovernancePolicy, ProposalKind};
+use crate::types::{GovernancePolicy, Proposal, ProposalKind, ProposalState};
 
 pub mod types;
 pub mod errors;
@@ -67,5 +67,20 @@ impl UpgradeController {
         approver: Address,
     ) -> Result<(), ContractError> {
         approvals::revoke(&env, proposal_id, approver)
+    }
+
+    pub fn get_proposal(env: Env, proposal_id: u64) -> Result<Proposal, ContractError> {
+        storage::proposal(&env, proposal_id).ok_or(ContractError::ProposalNotFound)
+    }
+
+    pub fn get_proposal_state(
+        env: Env,
+        proposal_id: u64,
+    ) -> Result<ProposalState, ContractError> {
+        proposals::state(&env, proposal_id)
+    }
+
+    pub fn has_approved(env: Env, proposal_id: u64, approver: Address) -> bool {
+        storage::has_approval(&env, proposal_id, &approver)
     }
 }
