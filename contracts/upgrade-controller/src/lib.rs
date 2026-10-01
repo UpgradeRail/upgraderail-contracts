@@ -111,10 +111,12 @@ impl UpgradeController {
     }
 
     pub fn maintain_fleet(env: Env, fleet_id: BytesN<32>) -> Result<(), ContractError> {
-        ttl::maintain_fleet(&env, &fleet_id)
+        ttl::maintain_fleet(&env, &fleet_id)?;
+        ttl::maintain_controller(&env)
     }
 
     pub fn maintain_proposal(env: Env, proposal_id: u64) -> Result<(), ContractError> {
-        ttl::maintain_proposal(&env, proposal_id)
+        ttl::maintain_proposal(&env, proposal_id)?;
+        ttl::maintain_controller(&env)
     }
 }
