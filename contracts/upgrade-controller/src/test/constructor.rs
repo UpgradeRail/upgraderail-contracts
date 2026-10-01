@@ -1,4 +1,4 @@
-use soroban_sdk::{testutils::Address as _, Address, Env, Vec};
+use soroban_sdk::{testutils::Address as _, Address, ContractExecutable, Env, Vec};
 
 use crate::storage;
 use crate::types::GovernancePolicy;
@@ -35,4 +35,22 @@ fn constructor_rejects_invalid_policy() {
     let mut configured = policy(&env);
     configured.threshold = 0;
     env.register(UpgradeController, (&configured,));
+}
+
+#[test]
+fn uploaded_wasm_deployment_runs_constructor() {
+    let env = Env::default();
+    let configured = policy(&env);
+    let host = env.register(UpgradeController, (&configured,));
+    let wasm: &[u8] = include_bytes!("../../../../fixtures/wasm/upgrade_controller_v1.wasm");
+    let hash = env.deployer().upload_contract_wasm(wasm);
+    let deployed = env.as_contract(&host, || {
+        env.deployer()
+            .with_current_contract([6; 32])
+            .deploy_contract(ContractExecutable::Wasm(hash), (&configured,))
+    });
+    let client = UpgradeControllerClient::new(&env, &deployed);
+    assert_eq!(client.get_policy(), configured);
+    assert_eq!(client.get_governance_epoch(), 1);
+    assert_eq!(client.get_controller_version(), 1);
 }
