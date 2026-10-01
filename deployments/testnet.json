@@ -6,6 +6,7 @@
   "production_target": "Mainnet Protocol 28",
   "deployment_cli": "stellar 28.1.0",
   "live_rpc_version": "29.0.0-b2b701685c79aee17fe4eb22dbd08a5dfd11594d",
+  "controller_deployment_timestamp_utc": "2026-10-01T16:03:47Z",
   "source_commit_at_controller_deployment": "430e67f1327d0daae4d1db9e2e5064beed42bb8c",
   "deployer": "GB6NGKUWJFXWAVE5K3UNLGTPTBGD3TDVOZAA3ITOBIMUR25SGMLGKRA6",
   "approver_1": "GBPU3GJ7P72CP4JSY25WERJRTLYFGKOLENGDBRZKBRRLHCUEBDZ7FSDL",
