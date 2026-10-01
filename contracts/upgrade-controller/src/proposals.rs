@@ -1,7 +1,9 @@
-use soroban_sdk::{Address, BytesN, Env, String};
+use soroban_sdk::{Address, BytesN, ContractExecutable, Env, String};
 
 use crate::errors::ContractError;
-use crate::events::{ProposalCancelled, ProposalCreated};
+use crate::events::{ControllerUpgraded, PolicyUpdated, ProposalCancelled, ProposalCreated, ProposalExecuted};
+use crate::approvals;
+use crate::fleets;
 use crate::policy::{self, PROPOSAL_TTL_SAFETY_BUFFER};
 use crate::storage;
 use crate::types::{DataKey, Proposal, ProposalKind, ProposalState, StoredProposalStatus};
@@ -185,5 +187,67 @@ pub(crate) fn cancel(env: &Env, id: u64, proposer: Address) -> Result<(), Contra
         proposer,
     }
     .publish(env);
+    Ok(())
+}
+
+pub(crate) fn execute(env: &Env, id: u64) -> Result<(), ContractError> {
+    let mut proposal = approvals::active(env, id, true)?;
+    let configured = storage::policy(env).ok_or(ContractError::InvalidPolicy)?;
+    if proposal.approval_count < configured.threshold {
+        return Err(ContractError::ThresholdNotMet);
+    }
+    if proposal.approved_ledger.is_none() {
+        return Err(ContractError::TimelockNotStarted);
+    }
+    let execute_after = proposal
+        .execute_after_ledger
+        .ok_or(ContractError::TimelockNotStarted)?;
+    if env.ledger().sequence() < execute_after {
+        return Err(ContractError::TimelockNotElapsed);
+    }
+    match &proposal.kind {
+        ProposalKind::CreateFleet(payload) => fleets::create(env, id, payload)?,
+        ProposalKind::UpgradeFleet(payload) => fleets::upgrade(env, id, payload)?,
+        ProposalKind::UpdatePolicy(payload) => {
+            policy::validate(env, &payload.policy)?;
+            let next_epoch = storage::epoch(env)
+                .ok_or(ContractError::InvalidPolicy)?
+                .checked_add(1)
+                .ok_or(ContractError::ArithmeticOverflow)?;
+            storage::set_policy(env, &payload.policy);
+            storage::set_epoch(env, next_epoch);
+            PolicyUpdated {
+                proposal_id: id,
+                governance_epoch: next_epoch,
+            }
+            .publish(env);
+        }
+        ProposalKind::UpgradeController(payload) => {
+            let current = storage::version(env).ok_or(ContractError::InvalidPolicy)?;
+            if current != payload.expected_controller_version {
+                return Err(ContractError::ControllerVersionMismatch);
+            }
+            let next = current
+                .checked_add(1)
+                .ok_or(ContractError::ArithmeticOverflow)?;
+            if next != payload.new_controller_version {
+                return Err(ContractError::InvalidControllerVersion);
+            }
+            storage::set_version(env, next);
+            env.deployer().update_current_contract(ContractExecutable::Wasm(
+                payload.new_wasm_hash.clone(),
+            ));
+            ControllerUpgraded {
+                proposal_id: id,
+                new_controller_version: next,
+                new_wasm_hash: payload.new_wasm_hash.clone(),
+                manifest_hash: payload.manifest_hash.clone(),
+            }
+            .publish(env);
+        }
+    }
+    proposal.status = StoredProposalStatus::Executed;
+    storage::set_proposal(env, &proposal);
+    ProposalExecuted { proposal_id: id }.publish(env);
     Ok(())
 }
