@@ -40,3 +40,10 @@ pub struct ThresholdReset {
     #[topic]
     pub proposal_id: u64,
 }
+
+#[contractevent]
+pub struct ProposalCancelled {
+    #[topic]
+    pub proposal_id: u64,
+    pub proposer: Address,
+}

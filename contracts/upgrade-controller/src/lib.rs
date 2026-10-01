@@ -83,4 +83,12 @@ impl UpgradeController {
     pub fn has_approved(env: Env, proposal_id: u64, approver: Address) -> bool {
         storage::has_approval(&env, proposal_id, &approver)
     }
+
+    pub fn cancel_proposal(
+        env: Env,
+        proposal_id: u64,
+        proposer: Address,
+    ) -> Result<(), ContractError> {
+        proposals::cancel(&env, proposal_id, proposer)
+    }
 }

@@ -1,7 +1,7 @@
 use soroban_sdk::{Address, BytesN, Env, String};
 
 use crate::errors::ContractError;
-use crate::events::ProposalCreated;
+use crate::events::{ProposalCancelled, ProposalCreated};
 use crate::policy::{self, PROPOSAL_TTL_SAFETY_BUFFER};
 use crate::storage;
 use crate::types::{DataKey, Proposal, ProposalKind, ProposalState, StoredProposalStatus};
@@ -163,4 +163,27 @@ pub(crate) fn state(env: &Env, id: u64) -> Result<ProposalState, ContractError> 
     } else {
         Ok(ProposalState::Ready)
     }
+}
+
+pub(crate) fn cancel(env: &Env, id: u64, proposer: Address) -> Result<(), ContractError> {
+    proposer.require_auth();
+    let mut proposal = storage::proposal(env, id).ok_or(ContractError::ProposalNotFound)?;
+    if proposal.status != StoredProposalStatus::Active {
+        return Err(ContractError::ProposalNotActive);
+    }
+    if proposer != proposal.proposer {
+        return Err(ContractError::NotApprover);
+    }
+    let configured = storage::policy(env).ok_or(ContractError::InvalidPolicy)?;
+    if proposal.approval_count >= configured.threshold {
+        return Err(ContractError::CannotCancelAfterThreshold);
+    }
+    proposal.status = StoredProposalStatus::Cancelled;
+    storage::set_proposal(env, &proposal);
+    ProposalCancelled {
+        proposal_id: id,
+        proposer,
+    }
+    .publish(env);
+    Ok(())
 }
