@@ -33,35 +33,61 @@ fn creation_and_approval_events_expose_stable_fields() {
     );
     assert_eq!(
         env.events().all(),
-        vec![&env, (
-            controller.clone(),
-            (Symbol::new(&env, "proposal_created"), id).into_val(&env),
-            Map::<Symbol, Val>::from_array(&env, [
-                (Symbol::new(&env, "proposer"), approver.clone().into_val(&env)),
-                (Symbol::new(&env, "governance_epoch"), 1_u64.into_val(&env)),
-                (Symbol::new(&env, "expires_ledger"), expires_ledger.into_val(&env)),
-            ]).into_val(&env),
-        )]
+        vec![
+            &env,
+            (
+                controller.clone(),
+                (Symbol::new(&env, "proposal_created"), id).into_val(&env),
+                Map::<Symbol, Val>::from_array(
+                    &env,
+                    [
+                        (
+                            Symbol::new(&env, "proposer"),
+                            approver.clone().into_val(&env)
+                        ),
+                        (Symbol::new(&env, "governance_epoch"), 1_u64.into_val(&env)),
+                        (
+                            Symbol::new(&env, "expires_ledger"),
+                            expires_ledger.into_val(&env)
+                        ),
+                    ]
+                )
+                .into_val(&env),
+            )
+        ]
     );
     client.approve(&id, &approver);
     let approved_ledger = env.ledger().sequence();
     assert_eq!(
         env.events().all(),
-        vec![&env,
+        vec![
+            &env,
             (
                 controller.clone(),
                 (Symbol::new(&env, "threshold_reached"), id).into_val(&env),
-                Map::<Symbol, Val>::from_array(&env, [
-                    (Symbol::new(&env, "approved_ledger"), approved_ledger.into_val(&env)),
-                    (Symbol::new(&env, "execute_after_ledger"), (approved_ledger + 3).into_val(&env)),
-                ]).into_val(&env),
+                Map::<Symbol, Val>::from_array(
+                    &env,
+                    [
+                        (
+                            Symbol::new(&env, "approved_ledger"),
+                            approved_ledger.into_val(&env)
+                        ),
+                        (
+                            Symbol::new(&env, "execute_after_ledger"),
+                            (approved_ledger + 3).into_val(&env)
+                        ),
+                    ]
+                )
+                .into_val(&env),
             ),
             (
                 controller,
                 (Symbol::new(&env, "proposal_approved"), id, approver).into_val(&env),
-                Map::<Symbol, Val>::from_array(&env, [
-                    (Symbol::new(&env, "approval_count"), 1_u32.into_val(&env)),
-                ]).into_val(&env),
+                Map::<Symbol, Val>::from_array(
+                    &env,
+                    [(Symbol::new(&env, "approval_count"), 1_u32.into_val(&env)),]
+                )
+                .into_val(&env),
             ),
         ]
     );

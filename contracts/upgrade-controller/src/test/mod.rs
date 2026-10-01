@@ -1,9 +1,9 @@
 mod approvals;
 mod constructor;
 mod controller_upgrade;
+mod events;
 mod fleet_upgrade;
 mod governance;
 mod policy;
 mod proposals;
 mod ttl;
-mod events;

@@ -113,10 +113,10 @@ fn twenty_approvers_can_complete_threshold_under_test_budget() {
         }),
     );
     for approver in configured.approvers.iter() {
-        env.budget().reset_tracker();
+        env.cost_estimate().budget().reset_tracker();
         client.approve(&id, &approver);
-        assert!(env.budget().cpu_instruction_cost() < 400_000_000);
-        assert!(env.budget().memory_bytes_cost() < 41_943_040);
+        assert!(env.cost_estimate().budget().cpu_instruction_cost() < 400_000_000);
+        assert!(env.cost_estimate().budget().memory_bytes_cost() < 41_943_040);
     }
     assert_eq!(client.get_proposal(&id).approval_count, MAX_APPROVERS);
 }

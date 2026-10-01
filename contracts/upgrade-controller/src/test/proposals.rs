@@ -1,4 +1,7 @@
-use soroban_sdk::{testutils::{Address as _, Ledger as _}, Address, BytesN, Env, String, Vec};
+use soroban_sdk::{
+    testutils::{Address as _, Ledger as _},
+    Address, BytesN, Env, String, Vec,
+};
 
 use crate::storage;
 use crate::types::{
@@ -139,13 +142,27 @@ fn lifecycle_state_changes_at_timelock_and_expiry_boundaries() {
     client.approve(&proposal_id, &approver);
     client.approve(&proposal_id, &second);
     let stored = client.get_proposal(&proposal_id);
-    assert_eq!(client.get_proposal_state(&proposal_id), crate::types::ProposalState::Timelocked);
+    assert_eq!(
+        client.get_proposal_state(&proposal_id),
+        crate::types::ProposalState::Timelocked
+    );
 
-    env.ledger().set_sequence_number(stored.execute_after_ledger.unwrap() - 1);
-    assert_eq!(client.get_proposal_state(&proposal_id), crate::types::ProposalState::Timelocked);
-    env.ledger().set_sequence_number(stored.execute_after_ledger.unwrap());
-    assert_eq!(client.get_proposal_state(&proposal_id), crate::types::ProposalState::Ready);
+    env.ledger()
+        .set_sequence_number(stored.execute_after_ledger.unwrap() - 1);
+    assert_eq!(
+        client.get_proposal_state(&proposal_id),
+        crate::types::ProposalState::Timelocked
+    );
+    env.ledger()
+        .set_sequence_number(stored.execute_after_ledger.unwrap());
+    assert_eq!(
+        client.get_proposal_state(&proposal_id),
+        crate::types::ProposalState::Ready
+    );
     env.ledger().set_sequence_number(stored.expires_ledger);
-    assert_eq!(client.get_proposal_state(&proposal_id), crate::types::ProposalState::Expired);
+    assert_eq!(
+        client.get_proposal_state(&proposal_id),
+        crate::types::ProposalState::Expired
+    );
     assert!(client.try_execute_proposal(&proposal_id).is_err());
 }

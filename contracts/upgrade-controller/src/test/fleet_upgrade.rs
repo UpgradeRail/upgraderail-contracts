@@ -116,7 +116,8 @@ fn uploaded_wasm_creates_reference_and_upgrades_two_instances() {
     assert_eq!(client.get_current_wasm(&fleet_id), next);
     client.approve(&outdated_id, &first);
     client.approve(&outdated_id, &second);
-    env.ledger().set_sequence_number(env.ledger().sequence() + 3);
+    env.ledger()
+        .set_sequence_number(env.ledger().sequence() + 3);
     assert!(client.try_execute_proposal(&outdated_id).is_err());
     for (instance, expected_value) in [(instance_a, 7_i64), (instance_b, 9_i64)] {
         assert_eq!(
@@ -178,13 +179,15 @@ fn migration_fixture_moves_existing_instance_state() {
     );
     approve_and_execute(&env, &client, id, &first, &second);
     let instance = env.as_contract(&controller, || {
-        env.deployer().with_current_contract([7; 32]).deploy_contract(
-            ContractExecutable::ExternalRef(ContractExecutableRef {
-                owner: controller.clone(),
-                tag,
-            }),
-            (),
-        )
+        env.deployer()
+            .with_current_contract([7; 32])
+            .deploy_contract(
+                ContractExecutable::ExternalRef(ContractExecutableRef {
+                    owner: controller.clone(),
+                    tag,
+                }),
+                (),
+            )
     });
     env.invoke_contract::<()>(
         &instance,
