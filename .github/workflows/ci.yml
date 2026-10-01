@@ -6,6 +6,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -15,7 +19,11 @@ jobs:
       - name: Install pinned Rust toolchain
         run: rustup toolchain install 1.98.1 --profile minimal --component rustfmt --component clippy --target wasm32v1-none
       - name: Install pinned Stellar CLI
-        run: cargo install stellar-cli --version 28.1.0 --locked
+        run: |
+          curl -fsSL --retry 3 -o /tmp/stellar-cli.deb https://github.com/stellar/stellar-cli/releases/download/v28.1.0/stellar-cli_28.1.0_amd64.deb
+          echo "1a7b64706747353d84ecdb6b3fa727aa955e8e9150104731805504c437ea9e41  /tmp/stellar-cli.deb" | sha256sum --check
+          sudo apt-get install -y /tmp/stellar-cli.deb
+          stellar version
       - name: Check formatting
         run: cargo fmt --all -- --check
       - name: Check workspace
