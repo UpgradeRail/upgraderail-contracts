@@ -35,4 +35,5 @@ pub enum ContractError {
     InvalidControllerVersion = 71,
     ArithmeticOverflow = 80,
     TtlConfigurationInvalid = 81,
+    StorageInvariantViolated = 82,
 }

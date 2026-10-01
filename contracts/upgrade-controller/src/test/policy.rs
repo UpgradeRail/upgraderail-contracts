@@ -60,7 +60,10 @@ fn rejects_invalid_timelock_and_lifetime() {
     configured.proposal_lifetime_ledgers = 10;
     assert_eq!(validate(&env, &configured), Err(ContractError::InvalidProposalLifetime));
 
-    configured.proposal_lifetime_ledgers = env.storage().max_ttl() - PROPOSAL_TTL_SAFETY_BUFFER;
+    configured.proposal_lifetime_ledgers = core::cmp::min(
+        env.storage().max_ttl(),
+        crate::ttl::MAX_TTL_EXTENSION,
+    ) - PROPOSAL_TTL_SAFETY_BUFFER;
     assert_eq!(validate(&env, &configured), Ok(()));
     configured.proposal_lifetime_ledgers += 1;
     assert_eq!(validate(&env, &configured), Err(ContractError::InvalidProposalLifetime));

@@ -13,6 +13,7 @@ pub mod proposals;
 pub mod events;
 pub mod approvals;
 pub mod fleets;
+pub mod ttl;
 
 #[cfg(test)]
 mod test;
@@ -28,10 +29,7 @@ impl UpgradeController {
         storage::set_epoch(&env, 1);
         storage::set_nonce(&env, 0);
         storage::set_version(&env, 1);
-        let max_ttl = env.storage().max_ttl();
-        env.storage()
-            .instance()
-            .extend_ttl_with_limits(max_ttl, 1, max_ttl);
+        ttl::maintain_controller(&env)?;
         Ok(())
     }
 
@@ -55,11 +53,14 @@ impl UpgradeController {
         proposer: Address,
         kind: ProposalKind,
     ) -> Result<u64, ContractError> {
-        proposals::create(&env, proposer, kind)
+        let id = proposals::create(&env, proposer, kind)?;
+        ttl::maintain_controller(&env)?;
+        Ok(id)
     }
 
     pub fn approve(env: Env, proposal_id: u64, approver: Address) -> Result<(), ContractError> {
-        approvals::approve(&env, proposal_id, approver)
+        approvals::approve(&env, proposal_id, approver)?;
+        ttl::maintain_controller(&env)
     }
 
     pub fn revoke_approval(
@@ -67,7 +68,8 @@ impl UpgradeController {
         proposal_id: u64,
         approver: Address,
     ) -> Result<(), ContractError> {
-        approvals::revoke(&env, proposal_id, approver)
+        approvals::revoke(&env, proposal_id, approver)?;
+        ttl::maintain_controller(&env)
     }
 
     pub fn get_proposal(env: Env, proposal_id: u64) -> Result<Proposal, ContractError> {
@@ -90,11 +92,13 @@ impl UpgradeController {
         proposal_id: u64,
         proposer: Address,
     ) -> Result<(), ContractError> {
-        proposals::cancel(&env, proposal_id, proposer)
+        proposals::cancel(&env, proposal_id, proposer)?;
+        ttl::maintain_controller(&env)
     }
 
     pub fn execute_proposal(env: Env, proposal_id: u64) -> Result<(), ContractError> {
-        proposals::execute(&env, proposal_id)
+        proposals::execute(&env, proposal_id)?;
+        ttl::maintain_controller(&env)
     }
 
     pub fn get_fleet(env: Env, fleet_id: BytesN<32>) -> Result<Fleet, ContractError> {
@@ -106,5 +110,17 @@ impl UpgradeController {
         fleet_id: BytesN<32>,
     ) -> Result<BytesN<32>, ContractError> {
         fleets::current_wasm(&env, &fleet_id)
+    }
+
+    pub fn maintain_controller(env: Env) -> Result<(), ContractError> {
+        ttl::maintain_controller(&env)
+    }
+
+    pub fn maintain_fleet(env: Env, fleet_id: BytesN<32>) -> Result<(), ContractError> {
+        ttl::maintain_fleet(&env, &fleet_id)
+    }
+
+    pub fn maintain_proposal(env: Env, proposal_id: u64) -> Result<(), ContractError> {
+        ttl::maintain_proposal(&env, proposal_id)
     }
 }

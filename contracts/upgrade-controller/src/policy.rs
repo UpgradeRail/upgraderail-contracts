@@ -42,7 +42,7 @@ pub(crate) fn validate(env: &Env, policy: &GovernancePolicy) -> Result<(), Contr
         .proposal_lifetime_ledgers
         .checked_add(PROPOSAL_TTL_SAFETY_BUFFER)
         .ok_or(ContractError::InvalidProposalLifetime)?;
-    if required_ttl > env.storage().max_ttl() {
+    if required_ttl > core::cmp::min(env.storage().max_ttl(), crate::ttl::MAX_TTL_EXTENSION) {
         return Err(ContractError::InvalidProposalLifetime);
     }
     Ok(())
