@@ -6,3 +6,4 @@ mod governance;
 mod policy;
 mod proposals;
 mod ttl;
+mod events;
