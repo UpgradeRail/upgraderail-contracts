@@ -11,6 +11,7 @@ pub mod storage;
 pub mod policy;
 pub mod proposals;
 pub mod events;
+pub mod approvals;
 
 #[cfg(test)]
 mod test;
@@ -54,5 +55,9 @@ impl UpgradeController {
         kind: ProposalKind,
     ) -> Result<u64, ContractError> {
         proposals::create(&env, proposer, kind)
+    }
+
+    pub fn approve(env: Env, proposal_id: u64, approver: Address) -> Result<(), ContractError> {
+        approvals::approve(&env, proposal_id, approver)
     }
 }
