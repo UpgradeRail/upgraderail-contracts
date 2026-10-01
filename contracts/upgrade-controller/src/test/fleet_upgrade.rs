@@ -10,6 +10,7 @@ use crate::{UpgradeController, UpgradeControllerClient};
 
 const V1_WASM: &[u8] = include_bytes!("../../../../fixtures/wasm/fleet_v1.wasm");
 const V2_WASM: &[u8] = include_bytes!("../../../../fixtures/wasm/fleet_v2_compatible.wasm");
+const MIGRATION_WASM: &[u8] = include_bytes!("../../../../fixtures/wasm/fleet_v2_migration.wasm");
 
 fn setup() -> (Env, Address, Address, Address) {
     let env = Env::default();
@@ -143,4 +144,66 @@ fn missing_uploaded_wasm_rolls_back_fleet_creation() {
         client.get_proposal_state(&id),
         crate::types::ProposalState::Ready
     );
+}
+
+#[test]
+fn migration_fixture_moves_existing_instance_state() {
+    let (env, controller, first, second) = setup();
+    let client = UpgradeControllerClient::new(&env, &controller);
+    let initial = env.deployer().upload_contract_wasm(V1_WASM);
+    let migration = env.deployer().upload_contract_wasm(MIGRATION_WASM);
+    let fleet_id = BytesN::from_array(&env, &[7; 32]);
+    let tag = String::from_str(&env, "migration-fleet");
+    let id = client.create_proposal(
+        &first,
+        &ProposalKind::CreateFleet(CreateFleetProposal {
+            fleet_id: fleet_id.clone(),
+            tag: tag.clone(),
+            initial_wasm_hash: initial.clone(),
+            manifest_hash: BytesN::from_array(&env, &[3; 32]),
+        }),
+    );
+    approve_and_execute(&env, &client, id, &first, &second);
+    let instance = env.as_contract(&controller, || {
+        env.deployer().with_current_contract([7; 32]).deploy_contract(
+            ContractExecutable::ExternalRef(ContractExecutableRef {
+                owner: controller.clone(),
+                tag,
+            }),
+            (),
+        )
+    });
+    env.invoke_contract::<()>(
+        &instance,
+        &symbol_short!("set_value"),
+        vec![&env, 42_i64.into_val(&env)],
+    );
+    let upgrade = client.create_proposal(
+        &first,
+        &ProposalKind::UpgradeFleet(UpgradeFleetProposal {
+            fleet_id,
+            expected_wasm_hash: initial,
+            new_wasm_hash: migration,
+            manifest_hash: BytesN::from_array(&env, &[4; 32]),
+        }),
+    );
+    approve_and_execute(&env, &client, upgrade, &first, &second);
+    assert_eq!(
+        env.invoke_contract::<Option<i64>>(&instance, &symbol_short!("get_value"), vec![&env]),
+        None
+    );
+    assert!(env.invoke_contract::<bool>(&instance, &symbol_short!("migrate"), vec![&env]));
+    assert_eq!(
+        env.invoke_contract::<Option<i64>>(&instance, &symbol_short!("get_value"), vec![&env]),
+        Some(42)
+    );
+    assert_eq!(
+        env.invoke_contract::<Option<u32>>(
+            &instance,
+            &Symbol::new(&env, "migration_ledger"),
+            vec![&env],
+        ),
+        Some(env.ledger().sequence())
+    );
+    assert!(!env.invoke_contract::<bool>(&instance, &symbol_short!("migrate"), vec![&env]));
 }
