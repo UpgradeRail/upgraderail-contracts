@@ -25,3 +25,18 @@ pub struct ThresholdReached {
     pub approved_ledger: u32,
     pub execute_after_ledger: u32,
 }
+
+#[contractevent]
+pub struct ApprovalRevoked {
+    #[topic]
+    pub proposal_id: u64,
+    #[topic]
+    pub approver: Address,
+    pub approval_count: u32,
+}
+
+#[contractevent]
+pub struct ThresholdReset {
+    #[topic]
+    pub proposal_id: u64,
+}

@@ -60,4 +60,12 @@ impl UpgradeController {
     pub fn approve(env: Env, proposal_id: u64, approver: Address) -> Result<(), ContractError> {
         approvals::approve(&env, proposal_id, approver)
     }
+
+    pub fn revoke_approval(
+        env: Env,
+        proposal_id: u64,
+        approver: Address,
+    ) -> Result<(), ContractError> {
+        approvals::revoke(&env, proposal_id, approver)
+    }
 }

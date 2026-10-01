@@ -1,7 +1,7 @@
 use soroban_sdk::{Address, Env};
 
 use crate::errors::ContractError;
-use crate::events::{ProposalApproved, ThresholdReached};
+use crate::events::{ApprovalRevoked, ProposalApproved, ThresholdReached, ThresholdReset};
 use crate::policy::{self, PROPOSAL_TTL_SAFETY_BUFFER};
 use crate::storage;
 use crate::types::{DataKey, Proposal, StoredProposalStatus};
@@ -69,6 +69,34 @@ pub(crate) fn approve(env: &Env, id: u64, approver: Address) -> Result<(), Contr
     );
     storage::set_proposal(env, &proposal);
     ProposalApproved {
+        proposal_id: id,
+        approver,
+        approval_count: next_count,
+    }
+    .publish(env);
+    Ok(())
+}
+
+pub(crate) fn revoke(env: &Env, id: u64, approver: Address) -> Result<(), ContractError> {
+    approver.require_auth();
+    let configured = storage::policy(env).ok_or(ContractError::InvalidPolicy)?;
+    let mut proposal = active(env, id, false)?;
+    if !storage::has_approval(env, id, &approver) {
+        return Err(ContractError::ApprovalNotFound);
+    }
+    let previous_count = proposal.approval_count;
+    let next_count = previous_count
+        .checked_sub(1)
+        .ok_or(ContractError::ArithmeticOverflow)?;
+    proposal.approval_count = next_count;
+    if previous_count >= configured.threshold && next_count < configured.threshold {
+        proposal.approved_ledger = None;
+        proposal.execute_after_ledger = None;
+        ThresholdReset { proposal_id: id }.publish(env);
+    }
+    storage::remove_approval(env, id, &approver);
+    storage::set_proposal(env, &proposal);
+    ApprovalRevoked {
         proposal_id: id,
         approver,
         approval_count: next_count,
