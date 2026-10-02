@@ -143,47 +143,6 @@ fn uploaded_wasm_creates_reference_and_upgrades_two_instances() {
 }
 
 #[test]
-fn missing_uploaded_wasm_rolls_back_fleet_creation() {
-    let (env, controller, first, second) = setup();
-    let client = UpgradeControllerClient::new(&env, &controller);
-    let fleet_id = BytesN::from_array(&env, &[5; 32]);
-    let kind = ProposalKind::CreateFleet(CreateFleetProposal {
-        fleet_id: fleet_id.clone(),
-        tag: String::from_str(&env, "missing-wasm"),
-        initial_wasm_hash: BytesN::from_array(&env, &[8; 32]),
-        manifest_hash: BytesN::from_array(&env, &[3; 32]),
-    });
-    let id = client.create_proposal(&first, &kind);
-    client.approve(&id, &first);
-    client.approve(&id, &second);
-    env.ledger()
-        .set_sequence_number(env.ledger().sequence() + 3);
-    assert!(client.try_execute_proposal(&id).is_err());
-    assert!(client.try_get_fleet(&fleet_id).is_err());
-    assert_eq!(
-        client.get_proposal_state(&id),
-        crate::types::ProposalState::Ready
-    );
-}
-
-#[test]
-fn existing_executable_reference_blocks_fleet_creation() {
-    let (env, controller, first, _) = setup();
-    let client = UpgradeControllerClient::new(&env, &controller);
-    let initial = env.deployer().upload_contract_wasm(V1_WASM);
-    let tag = String::from_str(&env, "reserved-fleet");
-    env.as_contract(&controller, || env.executable_refs().set(&tag, &initial));
-
-    let kind = ProposalKind::CreateFleet(CreateFleetProposal {
-        fleet_id: BytesN::from_array(&env, &[8; 32]),
-        tag,
-        initial_wasm_hash: initial,
-        manifest_hash: BytesN::from_array(&env, &[3; 32]),
-    });
-    assert!(client.try_create_proposal(&first, &kind).is_err());
-}
-
-#[test]
 fn upgrade_rejects_current_candidate_and_missing_reference() {
     let (env, controller, first, second) = setup();
     let client = UpgradeControllerClient::new(&env, &controller);
