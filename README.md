@@ -1,10 +1,26 @@
+<p align="center">
+  <img src="assets/upgraderail-contracts-banner.jpg" alt="UpgradeRail Contracts" width="100%">
+</p>
+
 # UpgradeRail Contracts
 
-UpgradeRail is an open-source release safety system for Soroban contracts. This repository contains the on-chain governance and execution layer. Its only production contract is `UpgradeController`. The contract owns CAP-85 executable references and changes them only after a proposal, approver threshold, and timelock. It does not analyze WASM or run simulations.
+<p align="center">
+  <a href="https://github.com/UpgradeRail/upgraderail-contracts/actions/workflows/ci.yml"><img src="https://github.com/UpgradeRail/upgraderail-contracts/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue.svg" alt="License: Apache-2.0"></a>
+</p>
 
-## Why CAP-85 matters
+UpgradeRail Contracts is the on-chain governance and execution layer for governed Soroban upgrades. `UpgradeController` manages CAP-85 executable references through explicit proposals, approval thresholds, timelocks, and auditable execution.
 
-A Soroban contract can use an executable reference owned by another contract. The owner stores a tag that points to an uploaded WASM hash. Changing that reference changes the executable used by every contract attached to it at the next invocation. `UpgradeController` owns these references for fleets. It stores a fleet ID and tag, while fleet membership is tracked off-chain.
+<p align="center">
+  <a href="https://github.com/UpgradeRail/upgraderail-engine">Engine</a> |
+  <a href="https://github.com/UpgradeRail/upgraderail-console">Console</a> |
+  <a href="deployments/testnet.json">Testnet evidence</a> |
+  <a href="SECURITY.md">Security</a>
+</p>
+
+## What it does
+
+The `UpgradeController` contract owns CAP-85 executable references for fleets of contracts. It stores a fleet ID and tag, while fleet membership is tracked off-chain. Changing the reference updates the executable used by every attached contract at its next invocation.
 
 ```text
 approvers -> proposal and manifest hash -> threshold -> timelock
@@ -13,9 +29,13 @@ approvers -> proposal and manifest hash -> threshold -> timelock
                                                     -> all attached instances
 ```
 
-`upgraderail-engine` produces analysis and release manifest commitments. `upgraderail-console` provides the API, indexer, team management, and user interface. The controller stores a 32-byte manifest hash so clients can connect an executed change to the report the approvers reviewed. It does not interpret or endorse the report.
+The controller stores a 32-byte manifest hash so clients can connect an executed change to the report the approvers reviewed. It does not interpret or endorse the report. UpgradeRail does not analyze WASM or run simulations on-chain. `upgraderail-engine` produces analysis and release manifest commitments, while `upgraderail-console` provides the API, indexer, team management, and user interface.
 
-## Governance lifecycle
+## Why it exists
+
+A Soroban contract can use an executable reference owned by another contract. The owner stores a tag that points to an uploaded WASM hash. Changing that reference changes the executable used by every contract attached to it. CAP-85 allows a reference owner to change executable code for attached contracts. UpgradeRail does not eliminate that authority. It makes the authority rule-based, delayed, multi-party, and auditable.
+
+## Governance flow
 
 The constructor installs a `GovernancePolicy`, starts governance epoch and controller version at 1, and creates no administrator. A policy has 1 to 20 unique approvers, a threshold within that count, a positive timelock, and a proposal lifetime longer than the timelock. The lifetime plus a 17,280-ledger safety buffer must fit the supported TTL maximum. Fleet tags are limited to 1 to 64 bytes by UpgradeRail policy.
 
@@ -46,9 +66,9 @@ make ci
 
 This runs formatting, workspace compilation, Clippy with warnings denied, all tests, and WASM builds. `scripts/build.sh` first builds unoptimized WASM and compares every fixture to its committed test binary, then runs the standard optimized `stellar contract build`. The deployable controller is `target/wasm32v1-none/release/upgrade_controller.wasm` after the optimized build. Tests upload real fixture WASM to a local Soroban environment and verify that two instances sharing a CAP-85 reference both change behavior after an upgrade. A separate fixture exercises an explicit state migration.
 
-Run a single task with `make fmt`, `make check`, `make test`, `make build`, or `make clippy`. See [CONTRIBUTING.md](CONTRIBUTING.md) when editing fixtures or governance code.
+Run a single task with `make fmt`, `make check`, `make test`, `make build`, or `make clippy`.
 
-## Testnet deployment
+## Testnet verification
 
 The deployment scripts use a Stellar CLI identity. Set `STELLAR_SOURCE` to a funded identity name and `UPGRADERAIL_POLICY_JSON` to a real `GovernancePolicy` JSON value. `.env.example` lists these variables and contains no secrets. From a clean committed tree, run:
 
@@ -70,9 +90,13 @@ The [official software versions page](https://developers.stellar.org/docs/networ
 
 The Testnet verification policy is intentionally short lived: two dedicated approvers, a 2-of-2 threshold, a 12-ledger timelock, and a 720-ledger proposal lifetime. It is not a Mainnet policy. A dedicated SDK 28 [external-reference factory](fixtures/external-ref-factory/src/lib.rs) created two live instances of the same CAP-85 fleet. Both changed from v1 to v2 after governance execution and retained their separate instance values. The public addresses, transaction hashes, ledger numbers, contract IDs, WASM hashes, and rejected early execution results are recorded in the deployment record. Secret keys are not recorded.
 
-## Security and limits
+## Security and limitations
 
 There is no emergency administrator. Approver authorization and on-chain state checks govern executable changes. Anyone may pay for TTL maintenance, but the uploaded WASM code has its own TTL and operators must maintain it as well. The manifest hash is a commitment, not an on-chain safety verdict. The code has not had an independent audit. See [SECURITY.md](SECURITY.md) for the trust model and reporting process.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) when editing fixtures or governance code.
 
 ## License
 
