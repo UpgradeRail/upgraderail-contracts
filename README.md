@@ -12,6 +12,7 @@
 UpgradeRail Contracts is the on-chain governance and execution layer for governed Soroban upgrades. `UpgradeController` manages CAP-85 executable references through explicit proposals, approval thresholds, timelocks, and auditable execution.
 
 <p align="center">
+  <a href="https://upgraderail.github.io/">Documentation</a> |
   <a href="https://github.com/UpgradeRail/upgraderail-engine">Engine</a> |
   <a href="https://github.com/UpgradeRail/upgraderail-console">Console</a> |
   <a href="deployments/testnet.json">Testnet evidence</a> |
